@@ -1,0 +1,167 @@
+import "dotenv/config";
+import { PrismaClient } from "./generated/client";
+
+const prisma = new PrismaClient();
+
+async function main() {
+  await prisma.$connect();
+  console.log("Database connected successfully");
+
+  // const user = await prisma.user.createMany({
+  //   data: [
+  //     { name: "Rahul Sharma", email: "rahul@gmail.com", age: 25 },
+  //     { name: "Priya Patel", email: "priya@gmail.com", age: 28 },
+  //     { name: "Amit Kumar", email: "amit@gmail.com", age: 32 },
+  //     { name: "Sneha Desai", email: "sneha@gmail.com", age: 32 },
+  //     { name: "Vikram Singh", email: "vikram@gmail.com", age: 35 },
+  //     { name: "Neha Joshi", email: "neha@gmail.com", age: 27 },
+  //     { name: "Arjun Mehta", email: "arjun@gmail.com", age: 29 },
+  //     { name: "Pooja Shah", email: "pooja@gmail.com", age: 31 },
+  //     { name: "Karan Verma", email: "karan@gmail.com", age: 22 },
+  //     { name: "Anjali Gupta", email: "anjali@gmail.com", age: 26 },
+  //     { name: "Rohan Patil", email: "rohan@gmail.com", age: 38 },
+  //     { name: "Meera Kulkarni", email: "meera@gmail.com", age: 30 },
+  //     { name: "Suresh Nair", email: "suresh@gmail.com", age: 42 },
+  //     { name: "Kavita Rao", email: "kavita@gmail.com", age: 33 },
+  //     { name: "Nikhil Jain", email: "nikhil@gmail.com", age: 21 },
+  //   ],
+  // });
+  // console.log("New user's created ", user);
+
+  // const users = await prisma.user.findMany();
+  // console.log("Total users: ", users.length);
+
+  // const users = await prisma.user.findMany({
+  //   where: {
+  //     AND: [{ age: { gt: 25 } }, { isActive: true }],
+  //   },
+  // });
+  // const users = await prisma.user.findMany({
+  //   where: {
+  //     age: { gt: 25 },
+  //     isActive: true,
+  //   },
+  // });
+
+  // const users = await prisma.user.findMany({
+  //   where: {
+  //     name: {
+  //       contains: "a",
+  //       mode: "insensitive",
+  //     },
+  //   },
+  // });
+  // console.log("Users whose name contains 'a'", users);
+}
+
+main()
+  .catch((error) => {
+    console.error(error);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
+
+
+  const users = await prisma.user.findMany({
+    where: {
+      age: {
+        notIn: [22, 25, 30],
+      },
+    },
+  });
+  console.log("Users whose age is either 22, 25, or 30", users);
+
+  const users = await prisma.user.findMany({
+    where: {
+      isActive: true,
+      OR: [{ age: { lt: 25 } }, { age: { gt: 35 } }],
+    },
+  });
+  console.log("Users Age is less than 25 OR Age is greater than 35", users);
+
+   const users = await prisma.user.findMany({
+    where: {
+      AND: [{ isActive: true }, { age: { gt: 25 } }],
+    },
+  });
+  console.log("Users isActive is true And Age is greater than25", users);
+
+   const users = await prisma.user.findMany({
+    orderBy: {
+      // age: "asc",
+      age: "desc",
+    },
+  });
+  console.log("Users sorted by age in ascending order", users);
+
+//Task: Fetch only the first 5 users from the database.
+ const users = await prisma.user.findMany({
+    take: 5,
+  });
+
+  console.log("Fetch only the first 5 users", users);
+
+//Task: Skip the first 5 users and fetch the remaining users.
+   const users = await prisma.user.findMany({
+    skip: 5,
+  });
+
+  console.log("Use skip: 5", users);
+
+const users = await prisma.user.findMany({
+    take: 5,
+    skip: 5,
+  });
+
+  console.log("page 2, displaying 5 users per page.", users);
+
+  //Pagination
+
+  const page = 3;
+  const limit = 5;
+  const skip = (page - 1) * limit;
+
+  const users = await prisma.user.findMany({
+    skip,
+    take: limit,
+    orderBy: {
+      id: "asc",
+    },
+  });
+
+  console.log("page 3, displaying 5 users per page using skip and limit.", users);
+
+
+ const users = await prisma.user.findMany({
+    where: {
+      isActive: true,
+      age: { gt: 25 },
+    },
+    skip: 5,
+    take: 5,
+    orderBy: {
+      age: "asc",
+      id: "asc",
+    },
+  });
+
+  console.log("Display 5 users per page", users);
+
+   //Total records count with count()
+  const page = 2; // Current page requested
+  const limit = 5; // Records per page
+
+  const totalUsers = await prisma.user.count();
+  const totalPages = Math.ceil(totalUsers / limit);
+
+  const skip = (page - 1) * limit;
+
+  const users = await prisma.user.findMany({
+    skip,
+    take: limit,
+    orderBy: {
+      id: "asc",
+    },
+  });
+  console.log("Total users count", users);

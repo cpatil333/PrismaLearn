@@ -1,0 +1,323 @@
+ // 1. Create departments
+  const department = await prisma.department.createMany({
+    data: [
+      {
+        name: "It",
+      },
+      {
+        name: "HR",
+      },
+      {
+        name: "Finance",
+      },
+    ],
+  });
+
+  // 1. Fetch employees
+  const employees = await prisma.employee.createMany({
+    data: [
+      {
+        name: "Amit",
+        email: "amit@company.com",
+        salary: 50000,
+        departmentId: 1,
+      },
+      {
+        name: "Priya",
+        email: "priya@company.com",
+        salary: 45000,
+        departmentId: 2,
+      },
+      {
+        name: "Rahul",
+        email: "rahul@company.com",
+        salary: 60000,
+        departmentId: 1,
+      },
+    ],
+  });
+  console.log("Fetch employees ", employees);
+
+  //Fetch employees with their department details
+  const emplyees = await prisma.employee.findMany({
+    select: {
+      name: true,
+      email: true,
+      department: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
+
+  console.log("Fetch employees with their department details", emplyees);
+
+  const employee = await prisma.employee.findMany({
+    where: {
+      name: "Amit",
+    },
+    select: {
+      name: true,
+      department: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  });
+
+  console.log("Filtered employee with department:", employee);
+
+   const employee = await prisma.employee.findMany({
+    include: {
+      department: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
+
+  console.log("Fetch all employees with department:", employee);
+//Departments with employees
+  const department = await prisma.department.findMany({
+    include: {
+      employees: {
+        select: {
+          name: true,
+          email: true,
+        },
+      },
+    },
+  });
+
+  console.log("Departments with employees: ", JSON.stringify(department));
+
+  //Departments wise employees count
+  const department = await prisma.department.findMany({
+    include: {
+      _count: {
+        select: {
+          employees: true,
+        },
+      },
+    },
+  });
+
+  console.log("Department employee counts: ", department);
+
+//Departments wise employees count
+  const department = await prisma.department.findMany({
+    select: {
+      name: true,
+      _count: {
+        select: {
+          employees: true,
+        },
+      },
+    },
+  });
+
+  console.log("Department employee counts: ", department);
+
+   //Employees salary greater than 45000
+  const departments = await prisma.department.findMany({
+    select: {
+      name: true,
+      _count: {
+        select: {
+          employees: {
+            where: {
+              salary: { gt: 45000 },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  console.log("Employees salary greater than 45000: ", departments);
+
+  //Fetch only departments salary greater than 45000 at least one employees
+  //some
+  const departments = await prisma.department.findMany({
+    where: {
+      employees: {
+        some: {
+          salary: {
+            gt: 45000,
+          },
+        },
+      },
+    },
+    select: {
+      name: true,
+    },
+  });
+
+  console.log("Departments:", departments);
+
+//every
+
+ const departments = await prisma.department.findMany({
+    where: {
+      employees: {
+        every: {
+          salary: {
+            gt: 45000,
+          },
+        },
+      },
+    },
+    select: {
+      name: true,
+    },
+  });
+
+  console.log("Departments:", departments);
+
+const departments = await prisma.department.create({
+    data: {
+      name: "Marketing",
+      employees: {
+        create: [
+          {
+            name: "Sanjay",
+            email: "sanjay@company.com",
+            salary: 48000,
+          },
+          {
+            name: "Pooja",
+            email: "pooja@company.com",
+            salary: 52000,
+          },
+        ],
+      },
+    },
+  });
+
+  console.log("Departments:", departments);
+
+   const department = await prisma.department.findUnique({
+    where: {
+      id: 4,
+    },
+    include: {
+      employees: true,
+    },
+  });
+
+  console.log("Department with employees:", department);
+  
+  const department = await prisma.department.findUnique({
+    where: {
+      id: 4,
+    },
+    select: {
+      name: true,
+      employees: {
+        select: {
+          name: true,
+          salary: true,
+        },
+      },
+    },
+  });
+
+  console.log("Department with employees:", department);
+
+  //Department: Marketing (id: 4)
+  //Employee: Sanjay (id: 4)
+  //Current salary: 48,000
+  //New salary: 55,000
+
+  const department = await prisma.department.update({
+    where: {
+      id: 4,
+    },
+    data: {
+      employees: {
+        update: {
+          where: {
+            id: 4,
+          },
+          data: {
+            salary: 55000,
+          },
+        },
+      },
+    },
+    include: {
+      employees: true,
+    },
+  });
+
+  console.log("Updated department:", department);
+
+   const department = await prisma.department.update({
+    where: {
+      id: 4,
+    },
+    data: {
+      employees: {
+        update: [
+          {
+            where: { id: 4 },
+            data: { salary: 60000 },
+          },
+          {
+            where: { id: 5 },
+            data: { salary: 57000 },
+          },
+        ],
+      },
+    },
+    include: {
+      employees: true,
+    },
+  });
+
+  console.log("Updated department:", department);
+
+  //ask: Delete Pooja (employee ID 5) from Marketing (department ID 4),
+  const department = await prisma.department.update({
+    where: {
+      id: 4,
+    },
+    data: {
+      employees: {
+        delete: [
+          {
+            id: 5,
+          },
+        ],
+      },
+    },
+    include: {
+      employees: true,
+    },
+  });
+
+  console.log("Updated department:", department);
+
+  const department = await prisma.department.update({
+    where: {
+      id: 4,
+    },
+    data: {
+      employees: {
+        deleteMany: {
+          salary: {
+            lt: 55000,
+          },
+        },
+      },
+    },
+    include: {
+      employees: true,
+    },
+  });
+
+  console.log("Updated department:", department);
