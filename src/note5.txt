@@ -1,0 +1,124 @@
+async function getDepartmentSalaryReport() {
+  const employees = await prisma.employee.groupBy({
+    by: ["departmentId"],
+  });
+  return employees;
+}
+
+// Now let's count employees
+async function getDepartmentSalaryReport() {
+  const employees = await prisma.employee.groupBy({
+    by: ["departmentId"],
+    _count: {
+      _all: true,
+    },
+  });
+  return employees;
+}
+
+///Add average salary
+async function getDepartmentSalaryReport() {
+  const employees = await prisma.employee.groupBy({
+    by: ["departmentId"],
+    _count: {
+      _all: true,
+    },
+    _avg: {
+      salary: true,
+    },
+  });
+
+  return employees;
+}
+
+///
+async function getDepartmentSalaryReport() {
+  const employees = await prisma.employee.groupBy({
+    by: ["departmentId"],
+    _count: {
+      _all: true,
+    },
+    _avg: {
+      salary: true,
+    },
+    _sum: {
+      salary: true,
+    },
+  });
+
+  return employees;
+}
+
+////aggregate
+async function getDepartmentSalaryReport() {
+  const employees = await prisma.employee.aggregate({
+    _sum: {
+      salary: true,
+    },
+  });
+
+  return employees;
+}
+
+////
+Total salary of all employees.
+Average salary of all employees.
+Highest salary.
+Lowest salary.
+async function getEmployeeSalarySummary() {
+  const employees = await prisma.employee.aggregate({
+    _sum: {
+      salary: true,
+    },
+    _avg: {
+      salary: true,
+    },
+    _max: {
+      salary: true,
+    },
+    _min: {
+      salary: true,
+    },
+  });
+
+  return employees;
+}
+
+///Suppose HR wants a salary report for employees earning more than ₹50,000.
+async function getDepartmentsByAverageSalary() {
+  const department = await prisma.employee.groupBy({
+    by: ["departmentId"],
+    _avg: {
+      salary: true,
+    },
+    having: {
+      salary: {
+        _avg: {
+          gt: 50000,
+        },
+      },
+    },
+  });
+
+  return department;
+}
+
+/////
+we want departments whose combined employee salaries exceed ₹100,000.
+
+async function getDepartmentsByTotalSalary() {
+  // Your Prisma query
+  const department = await prisma.employee.groupBy({
+    by: ["departmentId"],
+    _sum: {
+      salary: true,
+    },
+    having: {
+      salary: {
+        _sum: { gt: 100000 },
+      },
+    },
+  });
+
+  return department;
+}

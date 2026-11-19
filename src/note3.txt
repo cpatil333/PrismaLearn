@@ -1,0 +1,132 @@
+async function getEmployees(employeeId: number) {
+  const employees = await prisma.employee.findFirst({
+    where: {
+      id: employeeId,
+    },
+  });
+
+  return employees;
+}
+async function main() {
+  await prisma.$connect();
+  console.log("Database connected successfully");
+  const employees = await getEmployees(3);
+
+  console.log(employees);
+}
+
+
+//////
+
+async function getEmployeeBySalary(employeeSalary: number) {
+  const employee = await prisma.employee.findMany({
+    where: {
+      salary: { gt: employeeSalary },
+    },
+  });
+
+  console.log(employee);
+}
+async function main() {
+  await prisma.$connect();
+  console.log("Database connected successfully");
+  const employees = await getEmployeeBySalary(50000);
+
+  console.log(employees);
+}
+
+/////
+
+async function getEmployeeByDepartmentAndSalary(
+  departmentId: number,
+  salary: number,
+) {
+  const employees = await prisma.employee.findMany({
+    where: {
+     departmentId,
+      salary: { gt: salary },
+    },
+  });
+
+  console.log(employees);
+}
+
+//////
+async function getEmployeeByDepartmentAndSalary(
+  departmentId: number,
+  salary: number,
+  sortOrder: "asc" | "desc",
+) {
+  const employees = await prisma.employee.findMany({
+    where: {
+      departmentId,
+      salary: { gt: salary },
+    },
+    orderBy: {
+      salary: sortOrder,
+    },
+  });
+
+  console.log(employees);
+}
+
+async function main() {
+  await prisma.$connect();
+  console.log("Database connected successfully");
+  const employees = await getEmployeeByDepartmentAndSalary(1, 50000, "desc");
+
+  console.log(employees);
+}
+
+/////
+Pagination.....
+
+async function getEmployeesByPage(page: number, limit: number) {
+  const skip = (page - 1) * limit;
+  const employees = await prisma.employee.findMany({
+    skip,
+    take: limit,
+  });
+  return employees;
+}
+async function main() {
+  await prisma.$connect();
+  console.log("Database connected successfully");
+  const employees = await getEmployeesByPage(2, 3);
+
+  console.log(employees);
+}
+
+///////////
+async function getEmployeesByPage(page: number, limit: number) {
+  //Validation
+  if (!Number.isInteger(page) || page <= 0) {
+    throw new Error("Page must be a positive integer");
+  }
+
+  if (!Number.isInteger(limit) || limit <= 0) {
+    throw new Error("Limit must be a positive integer");
+  }
+
+  const skip = (page - 1) * limit;
+  const employees = await prisma.employee.findMany({
+    skip,
+    take: limit,
+  });
+
+  const totalEmployees = await prisma.employee.count();
+
+  const totalPages = Math.ceil(totalEmployees / limit);
+
+  return { employees, totalEmployees, totalPages, currentPage: page };
+}
+async function main() {
+  await prisma.$connect();
+  console.log("Database connected successfully");
+  //const employees = await getEmployeesByPage(0, 3);
+  //const employees = await getEmployeesByPage(2, -5);
+  const employees = await getEmployeesByPage(1.5, 3);
+
+  console.log(employees);
+}
+

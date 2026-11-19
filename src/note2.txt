@@ -1,0 +1,269 @@
+ const [employeeCount, departmentCount] = await prisma.$transaction([
+    prisma.employee.count(),
+    prisma.department.count(),
+  ]);
+
+  console.log("Total employees:", employeeCount);
+  console.log("Total departments:", departmentCount);
+
+ //Sequential transaction — $transaction([])
+  const [department, employee] = await prisma.$transaction([
+    prisma.department.create({
+      data: { name: "Support" },
+    }),
+
+    prisma.employee.create({
+      data: {
+        name: "Rohit",
+        email: "rohit@company.com",
+        salary: 45000,
+        departmentId: 5,
+      },
+    }),
+  ]);
+
+  console.log(department);
+  console.log(employee);
+
+  //Interactive transaction — $transaction(async (tx) => {})
+const result = await prisma.$transaction(async (tx) => {
+    const department = await tx.department.create({
+      data: { name: "Sales" },
+    });
+
+    const employee = await tx.employee.create({
+      data: {
+        name: "Sharma",
+        email: "sharma@company.com",
+        salary: 45000,
+        departmentId: 6,
+      },
+    });
+    return { department, employee };
+  });
+
+  console.log(result);
+
+  const result = await prisma.$transaction(async (tx) => {
+    // Your first query
+    const department = await tx.department.findUnique({
+      where: {
+        name: "Support",
+      },
+    });
+
+    // Your second query
+    const employee = await tx.employee.count({
+      where: {
+        departmentId: department?.id,
+      },
+    });
+
+    return { department, employee };
+  });
+
+  console.log(result);
+
+  //Conditional transaction
+  const result = await prisma.$transaction(async (tx) => {
+    // Your first query
+    const department = await tx.department.findUnique({
+      where: {
+        id: 4,
+      },
+    });
+
+    // Your second query
+    if (department) {
+      const employee = await tx.employee.count({
+        where: {
+          departmentId: department?.id,
+        },
+      });
+      return { department, employee };
+    } else {
+      return "Department not found";
+    }
+  });
+
+  console.log(result);
+  
+
+  ///Transaction Roll Back
+  
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      // Your first query
+      const department = await tx.department.create({
+        data: {
+          name: "Testing",
+        },
+      });
+
+      // Your second query
+      const employee = await tx.employee.create({
+        data: {
+          name: "Sharma",
+          email: "sharma@company.com",
+          salary: 45000,
+          departmentId: department.id,
+        },
+      });
+      return { department, employee };
+    });
+    console.log("Transaction successful:", result);
+  } catch (error) {
+    console.log("Transaction failed. Changes rolled back.");
+
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    console.log("Prisma error code:", error.code);
+
+    if (error.code === "P2002") {
+      console.log("Employee email already exists.");
+    }
+  } else {
+    console.log("Unexpected error:", error);
+  }
+  }
+
+///roll back
+
+ try {
+    const result = await prisma.$transaction(async (tx) => {
+      const employee1 = await tx.employee.update({
+        where: { id: 1 },
+        data: { salary: 55000 },
+      });
+
+      const employee2 = await tx.employee.update({
+        where: { id: 999 },
+        data: { salary: 50000 },
+      });
+
+      return { employee1, employee2 };
+    });
+
+    console.log("Transaction successful:", result);
+  } catch (error) {
+    console.log("Transaction failed. Changes rolled back.");
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2025") {
+        console.log("Employee not found.");
+      }
+    }
+  }
+
+
+  Prisma Transaction Isolation Levels
+
+  const result = await prisma.$transaction(
+  async (tx) => {
+    const employee = await tx.employee.findUnique({
+      where: { id: 1 },
+    });
+
+    return employee;
+  },
+  {
+    isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
+  }
+);
+
+console.log(result);
+
+
+//Isolation...
+
+ await prisma.$connect();
+  console.log("Database connected successfully");
+
+  const delay = (ms: number) =>
+    new Promise((resolve) => setTimeout(resolve, ms));
+
+  const transactionA = await prisma.$transaction(
+    async (tx) => {
+      const firstRead = await prisma.employee.update({
+        where: { id: 1 },
+        data: { salary: 55000 },
+      });
+
+      console.log("Transaction A - First read:", firstRead?.salary);
+
+      await delay(3000);
+    },
+    {
+      isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
+      timeout: 10000,
+    },
+  );
+
+  const transactionB = (async () => {
+    await delay(1000);
+
+    await prisma.$transaction(async (tx) => {
+      console.log("B - Starting update:", Date.now());
+
+      const updatedEmployee = await tx.employee.update({
+        where: { id: 1 },
+        data: { salary: 60000 },
+      });
+
+      console.log("B - Update committed:", updatedEmployee.salary, Date.now());
+      await delay(3000);
+      console.log("Second read", updatedEmployee.salary, Date.now());
+    });
+  })();
+
+  //////
+
+  
+  const delay = (ms: number) =>
+    new Promise((resolve) => setTimeout(resolve, ms));
+
+  // Reset Amit's salary before the experiment
+  await prisma.employee.update({
+    where: { id: 1 },
+    data: { salary: 55000 },
+  });
+
+  // Transaction A: Read the salary twice
+  const transactionA = prisma.$transaction(
+    async (tx) => {
+      const firstRead = await tx.employee.findUnique({
+        where: { id: 1 },
+      });
+
+      console.log("Transaction A - First read:", firstRead?.salary);
+
+      await delay(4000);
+
+      const secondRead = await tx.employee.findUnique({
+        where: { id: 1 },
+      });
+
+      console.log("Transaction A - Second read:", secondRead?.salary);
+    },
+    {
+      isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
+      timeout: 10000,
+    },
+  );
+
+  // Transaction B: Update Amit's salary after 1 second
+  const transactionB = (async () => {
+    await delay(1000);
+
+    console.log("Transaction B - Starting update:", Date.now());
+
+    await prisma.$transaction(async (tx) => {
+      const updatedEmployee = await tx.employee.update({
+        where: { id: 1 },
+        data: { salary: 60000 },
+      });
+
+      console.log("Transaction B - Updated salary:", updatedEmployee.salary);
+    });
+  })();
+
+  // Wait for both transactions to complete
+  await Promise.all([transactionA, transactionB]);

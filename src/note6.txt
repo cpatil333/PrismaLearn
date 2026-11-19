@@ -1,0 +1,61 @@
+///Upset
+async function registerOrUpdateEmployee() {
+  // Your Prisma query
+  const employee = await prisma.employee.upsert({
+    where: {
+      email: "neha@company.com",
+    },
+    update: {
+      name: "Neha",
+      email: "neha@company.com",
+      salary: 55000,
+      departmentId: 1,
+    },
+    create: {
+      name: "Neha",
+      email: "neha@company.com",
+      salary: 55000,
+      departmentId: 1,
+    },
+  });
+
+  return employee;
+}
+
+/////
+Scenario: You have multiple employees belonging to the same department. You want to fetch a list of unique departmentId values, without duplicates.
+
+async function getUniqueDepartments() {
+  // Your Prisma query
+  const department = await prisma.employee.findMany({
+    select: {
+      departmentId: true,
+    },
+    distinct: ["departmentId"],
+  });
+  return department;
+}
+
+////
+Task: Fetch all employees with:
+- Employee name
+- Employee email
+- Employee salary
+- Related department name only
+
+async function getEmployeesWithDepartment() {
+  // Your Prisma query
+  const employees = await prisma.employee.findMany({
+    select: {
+      name: true,
+      email: true,
+      salary: true,
+      department: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
+  return employees;
+}

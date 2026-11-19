@@ -1,0 +1,200 @@
+async function getAllDepartments() {
+  const departments = await prisma.department.findMany({
+    include: {
+      employees: {
+        select: {
+          name: true,
+          salary: true,
+        },
+      },
+    },
+  });
+  return departments;
+}
+
+------
+async function getDepartmentsWithEmployees() {
+  const employees = await prisma.department.findMany({
+    select: {
+      name: true,
+      employees: {
+        select: {
+          name: true,
+          email: true,
+          salary: true,
+        },
+      },
+    },
+  });
+  return employees;
+}
+
+////
+
+async function getDepartmentsWithEmployeesSalary() {
+  const department = await prisma.department.findMany({
+    select: {
+      name: true,
+      employees: {
+        where: {
+          salary: { gt: 50000 },
+        },
+        select: {
+          name: true,
+          salary: true,
+        },
+      },
+    },
+  });
+  return department;
+}
+
+////
+async function getDepartmentsWithEmployeesSalary() {
+  const department = await prisma.department.findMany({
+    where: {
+      employees: {
+        some: {
+          salary: { gt: 50000 },
+        },
+      },
+    },
+  });
+
+  return department;
+}
+
+////
+async function getDepartmentsWithEmployeesSalary() {
+  const department = await prisma.department.findMany({
+    where: {
+      employees: {
+        every: {
+          salary: { gt: 50000 },
+        },
+      },
+    },
+  });
+
+  return department;
+}
+
+///
+
+async function getDepartmentsWithEmployeesSalary() {
+  const department = await prisma.department.findMany({
+    where: {
+      employees: {
+        none: {
+          salary: { gt: 50000 },
+        },
+      },
+    },
+  });
+
+  return department;
+}
+
+////
+
+async function getDepartmentsWithEmployeesSalary() {
+  const department = await prisma.department.findMany({
+    where: {
+      employees: {
+        some: {
+          salary: { gt: 50000 },
+        },
+      },
+    },
+    select: {
+      name: true,
+      employees: {
+        select: {
+          name: true,
+          salary: true,
+        },
+      },
+    },
+  });
+
+  return department;
+}
+
+/////
+async function getDepartmentsWithEmployeesSalary() {
+  const department = await prisma.department.findMany({
+    where: {
+      employees: {
+        some: {
+          salary: { gt: 50000 },
+        },
+      },
+    },
+    select: {
+      name: true,
+      employees: {
+        where: {
+          salary: { gt: 50000 },
+        },
+        select: {
+          name: true,
+          salary: true,
+        },
+      },
+    },
+  });
+
+  return department;
+}
+
+////
+
+async function getDepartmentsByMinimumSalary(minSalary: number) {
+  const department = await prisma.department.findMany({
+    where: {
+      employees: {
+        some: {
+          salary: { gt: minSalary },
+        },
+      },
+    },
+    select: {
+      name: true,
+      employees: {
+        where: {
+          salary: { gt: minSalary },
+        },
+        select: {
+          name: true,
+          salary: true,
+        },
+      },
+    },
+  });
+  return department;
+}
+/////
+async function getDepartmentWithEmployees(departmentId: number) {
+  const depatment = await prisma.department.findUnique({
+    where: {
+      id: departmentId,
+    },
+    select: {
+      name: true,
+      employees: {
+        select: {
+          name: true,
+          email: true,
+          salary: true,
+        },
+      },
+    },
+  });
+
+  if (depatment === null) {
+    throw new Error("Department not found");
+  }
+  return depatment;
+}
+
+////
