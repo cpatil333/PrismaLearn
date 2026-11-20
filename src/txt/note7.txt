@@ -1,0 +1,321 @@
+///Query Extension
+const prismas = new PrismaClient().$extends({
+  model: {
+    employee: {
+      async findHighSalaryEmployees() {
+        // Access the original Employee model methods
+        const context = Prisma.getExtensionContext(this);
+
+        // Fetch employees earning more than 50000
+        const employees = await (context as any).findMany({
+          where: {
+            salary: {
+              gt: 50000,
+            },
+          },
+        });
+
+        // Return the result
+        return employees;
+      },
+    },
+  },
+});
+
+/////
+const prisma = new PrismaClient();
+
+const prismas = prisma.$extends({
+  model: {
+    employee: {
+      async findHighSalaryEmployees() {
+        const context = Prisma.getExtensionContext(this);
+
+        return (context as any).findMany({
+          where: {
+            salary: {
+              gt: 50000,
+            },
+          },
+        });
+      },
+    },
+
+    department: {
+      async findAllDepartments() {
+        const context = Prisma.getExtensionContext(this);
+
+        return (context as any).findMany();
+      },
+    },
+
+    designation: {
+      async findAllDesignations() {
+        const context = Prisma.getExtensionContext(this);
+
+        return (context as any).findMany();
+      },
+    },
+  },
+});
+const employees = await prismas.employee.findHighSalaryEmployees();
+
+const departments = await prismas.department.findAllDepartments();
+
+const designations = await prismas.designation.findAllDesignations();
+
+/////
+Relationship/related multiple tables.
+const prisma = new PrismaClient();
+
+const prismas = prisma.$extends({
+  model: {
+    employee: {
+      async findEmployeesWithDepartment() {
+        const context = Prisma.getExtensionContext(this);
+
+        return (context as any).findMany({
+          include: {
+            department: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        });
+      },
+    },
+  },
+});
+const employees = await prismas.employee.findEmployeesWithDepartment();
+
+console.log(employees);
+
+/////////////// Salary greate than 50000/60000
+const prismas = new PrismaClient().$extends({
+  model: {
+    employee: {
+      async findEmployeesBySalary(salary: number) {
+        // Access the original Employee model methods
+        const context = Prisma.getExtensionContext(this);
+
+        // Fetch employees earning more than 50000
+        const employees = await (context as any).findMany({
+          where: {
+            salary: {
+              gt: salary,
+            },
+          },
+        });
+
+        // Return the result
+        return employees;
+      },
+    },
+  },
+});
+
+///////////
+greate than and less than salary
+const prismas = new PrismaClient().$extends({
+  model: {
+    employee: {
+      async findEmployeesBySalary(minSalary: number, maxSalary: number) {
+        // Access the original Employee model methods
+        const context = Prisma.getExtensionContext(this);
+
+        // Fetch employees earning more than 50000
+        const employees = await (context as any).findMany({
+          where: {
+            AND: [
+              { salary: { gte: minSalary } },
+              { salary: { lte: maxSalary } },
+            ],
+          },
+        });
+
+        // Return the result
+        return employees;
+      },
+    },
+  },
+});
+
+Using OR:
+const employees = await (context as any).findMany({
+  where: {
+    OR: [
+      { salary: { lte: minSalary } },
+      { salary: { gte: maxSalary } },
+    ],
+  },
+});
+///////
+Combining AND and OR
+
+const employees = await (context as any).findMany({
+  where: {
+    AND: [
+      { salary: { gte: minSalary } },
+      { salary: { lte: maxSalary } },
+      {
+        OR: [
+          { department: 'Engineering' },
+          { department: 'Product' },
+        ],
+      },
+    ],
+  },
+});
+
+//////
+const prismas = new PrismaClient().$extends({
+  model: {
+    employee: {
+      async findEmployeesBySalary(minSalary: number, maxSalary: number) {
+        // Access the original Employee model methods
+        const context = Prisma.getExtensionContext(this);
+
+        // Fetch employees earning more than 50000
+        const employees = await (context as any).findMany({
+          where: {
+            salary: {
+              gte: minSalary,
+              lte: maxSalary,
+            },
+          },
+        });
+
+        // Return the result
+        return employees;
+      },
+    },
+  },
+});
+
+/////
+create new employee.. 
+const prismas = new PrismaClient().$extends({
+  query: {
+    employee: {
+      async create({ args, query }) {
+        // Add your logging here
+        console.log("Creating a new employee...");
+        return query(args);
+      },
+    },
+  },
+});
+
+async function main() {
+  await prisma.$connect();
+  console.log("Database connected successfully");
+
+  const employee = await prismas.employee.create({
+    data: {
+      name: "Kiran",
+      email: "kiran@company.com",
+      salary: 45000,
+      departmentId: 1,
+    },
+  });
+
+  console.log(employee);
+}
+
+//////
+Update
+
+const prismas = new PrismaClient().$extends({
+  query: {
+    employee: {
+      async update({ args, query }) {
+        // Add your logging here
+        console.log("Updating employee...");
+        return query(args);
+      },
+    },
+  },
+});
+
+async function main() {
+  await prisma.$connect();
+  console.log("Database connected successfully");
+
+  const employee = await prismas.employee.update({
+    where: {
+      id: 17,
+    },
+    data: {
+      name: "Kiran Joshi",
+      email: "kiran.joshi@company.com",
+      salary: 500000,
+      departmentId: 1,
+    },
+  });
+
+  console.log(employee);
+}
+
+/////
+Delete
+const prismas = new PrismaClient().$extends({
+  query: {
+    employee: {
+      async delete({ args, query }) {
+        // Add your logging here
+        console.log("Deleting employee...");
+        return query(args);
+      },
+    },
+  },
+});
+
+async function main() {
+  await prismas.$connect();
+  console.log("Database connected successfully");
+
+  const employee = await prismas.employee.delete({
+    where: {
+      id: 17,
+    },
+  });
+
+  console.log(employee);
+}
+
+////
+
+const prismas = new PrismaClient().$extends({
+  query: {
+    employee: {
+      async upsert({ args, query }) {
+        console.log("Creating or updating employee...");
+        return query(args);
+      },
+    },
+  },
+});
+
+async function main() {
+  await prismas.$connect();
+  console.log("Database connected successfully");
+
+  const employee = await prismas.employee.upsert({
+    where: {
+      email: "neha@company.com",
+    },
+    update: {
+      salary: 60000,
+    },
+    create: {
+      name: "Neha",
+      email: "neha@company.com",
+      salary: 60000,
+      departmentId: 1,
+    },
+  });
+
+  console.log(employee);
+}
+
