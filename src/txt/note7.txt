@@ -319,3 +319,533 @@ async function main() {
   console.log(employee);
 }
 
+///// Create many
+const prismas = new PrismaClient().$extends({
+  query: {
+    employee: {
+      async createMany({ args, query }) {
+        console.log("Creating multiple employees...");
+        return query(args);
+      },
+    },
+  },
+});
+
+async function main() {
+  await prismas.$connect();
+  console.log("Database connected successfully");
+
+  const employee = await prismas.employee.createMany({
+    data: [
+      {
+        name: "Ram Sharma",
+        email: "ram@gmail.com",
+        salary: 45000,
+        departmentId: 1,
+      },
+      {
+        name: "Mahima Patel",
+        email: "mahima@gmail.com",
+        salary: 50000,
+        departmentId: 2,
+      },
+      {
+        name: "Amol Kumar",
+        email: "amol@gmail.com",
+        salary: 55000,
+        departmentId: 3,
+      },
+    ],
+  });
+
+  console.log(employee);
+}
+
+/// Update Many
+const prismas = new PrismaClient().$extends({
+  query: {
+    employee: {
+      async updateMany({ args, query }) {
+        console.log("Updating multiple employees...");
+        return query(args);
+      },
+    },
+  },
+});
+
+async function main() {
+  await prismas.$connect();
+  console.log("Database connected successfully");
+
+  const employee = await prismas.employee.updateMany({
+    where: {
+      departmentId: 1,
+    },
+    data: {
+      salary: 60000,
+    },
+  });
+
+  console.log(employee);
+}
+
+/// Delete Many
+const prismas = new PrismaClient().$extends({
+  query: {
+    employee: {
+      async deleteMany({ args, query }) {
+        console.log("Deleting multiple employees...");
+        return query(args);
+      },
+    },
+  },
+});
+
+async function main() {
+  await prismas.$connect();
+  console.log("Database connected successfully");
+
+  const employee = await prismas.employee.deleteMany({
+    where: {
+      salary: { lt: 50000 },
+    },
+  });
+
+  console.log(employee);
+}
+
+/////
+update log..
+const prismas = new PrismaClient().$extends({
+  query: {
+    employee: {
+      async update({ args, query }) {
+        console.log("Operation: update");
+        console.log(`Employee ID: ${args.where.id}`);
+        console.log(`Timestamp: ${new Date().toISOString()}`);
+        return query(args);
+      },
+    },
+  },
+});
+
+async function main() {
+  await prismas.$connect();
+  console.log("Database connected successfully");
+
+  const employee = await prismas.employee.update({
+    where: {
+      id: 1,
+    },
+    data: {
+      name: "Rina Kulkarni",
+      email: "rina@gmail.com",
+      salary: 35000,
+      departmentId: 3,
+    },
+  });
+
+  console.log(employee);
+}
+
+//////
+create log
+Database connected successfully
+Operation: create
+Employee Email: arun@gmail.com
+Timestamp: 2026-11-20T09:43:59.845Z
+{
+  id: 22,
+  name: 'Arun Mehta',
+  email: 'arun@gmail.com',
+  salary: 50000,
+  departmentId: 2
+}
+
+////
+delete log
+const prismas = new PrismaClient().$extends({
+  query: {
+    employee: {
+      async delete({ args, query }) {
+        console.log("Operation: delete");
+        console.log(`Employee ID: ${args.where.id}`);
+        console.log(`Timestamp: ${new Date().toISOString()}`);
+        return query(args);
+      },
+    },
+  },
+});
+
+async function main() {
+  await prismas.$connect();
+  console.log("Database connected successfully");
+
+  const employee = await prismas.employee.delete({
+    where: {
+      id: 22,
+    },
+  });
+
+  console.log(employee);
+}
+
+////
+const prismas = new PrismaClient().$extends({
+  query: {
+    employee: {
+      async upsert({ args, query }) {
+        console.log("Operation: upsert");
+        console.log(`Employee Email: ${args.where.email}`);
+        console.log(`Timestamp: ${new Date().toISOString()}`);
+        return query(args);
+      },
+    },
+  },
+});
+
+async function main() {
+  await prismas.$connect();
+  console.log("Database connected successfully");
+
+  const employee = await prismas.employee.upsert({
+    where: {
+      email: "arun@gmail.com",
+    },
+    update: {
+      name: "Arun Mehta",
+      email: "arun@gmail.com",
+      salary: 50000,
+      departmentId: 2,
+    },
+    create: {
+      name: "Arun Mehta",
+      email: "arun@gmail.com",
+      salary: 50000,
+      departmentId: 2,
+    },
+  });
+
+  console.log(employee);
+}
+
+////
+const prismas = new PrismaClient().$extends({
+  query: {
+    employee: {
+      async update({ args, query }) {
+        const identifier = args.where.id ?? args.where.email;
+
+        if (identifier === undefined) {
+          throw new Error("Employee ID or email is required");
+        }
+
+        logEmployeeOperation("update", identifier);
+
+        return query(args);
+      },
+    },
+  },
+});
+
+function logEmployeeOperation(operation: string, identifier: string | number) {
+  console.log(`Operation: ${operation}`);
+  console.log(`Employee: ${identifier}`);
+  console.log(`Timestamp: ${new Date().toISOString()}`);
+}
+
+async function main() {
+  await prismas.$connect();
+  console.log("Database connected successfully");
+  const employee = await prismas.employee.update({
+    where: {
+      email: "rina@gmail.com",
+    },
+    data: {
+      name: "Rina Kulkarni",
+      email: "rina@gmail.com",
+      salary: 35000,
+      departmentId: 3,
+    },
+  });
+
+  //console.log("Database connected successfully");
+}
+
+///////
+const prismas = new PrismaClient().$extends({
+  query: {
+    employee: {
+      async create({ args, query }) {
+        logEmployeeOperation("create", args.data.email);
+
+        return query(args);
+      },
+    },
+  },
+});
+
+function logEmployeeOperation(operation: string, identifier: string | number) {
+  console.log(`Operation: ${operation}`);
+  console.log(`Employee: ${identifier}`);
+  console.log(`Timestamp: ${new Date().toISOString()}`);
+}
+
+async function main() {
+  await prismas.$connect();
+  console.log("Database connected successfully");
+  const employee = await prismas.employee.create({
+    data: {
+      name: "Ashish Shah",
+      email: "ashish@gmail.com",
+      salary: 55000,
+      departmentId: 2,
+    },
+  });
+
+  console.log(employee);
+}
+
+///// delete
+const prismas = new PrismaClient().$extends({
+  query: {
+    employee: {
+      async delete({ args, query }) {
+        const identifier = args.where.id ?? args.where.email;
+
+        if (identifier === undefined) {
+          throw new Error("Employee ID or email is required");
+        }
+
+        logEmployeeOperation("delete", identifier);
+
+        return query(args);
+      },
+    },
+  },
+});
+
+function logEmployeeOperation(operation: string, identifier: string | number) {
+  console.log(`Operation: ${operation}`);
+  console.log(`Employee: ${identifier}`);
+  console.log(`Timestamp: ${new Date().toISOString()}`);
+}
+
+async function main() {
+  await prismas.$connect();
+  console.log("Database connected successfully");
+  const employee = await prismas.employee.delete({
+    where: {
+      id: 23,
+    },
+  });
+
+  console.log(employee);
+}
+
+////
+const prismas = new PrismaClient().$extends({
+  query: {
+    employee: {
+      async upsert({ args, query }) {
+        const identifier = args.where.id ?? args.where.email;
+
+        if (identifier === undefined) {
+          throw new Error("Employee ID or email is required");
+        }
+
+        logEmployeeOperation("upsert", identifier);
+
+        return query(args);
+      },
+    },
+  },
+});
+
+function logEmployeeOperation(operation: string, identifier: string | number) {
+  console.log(`Operation: ${operation}`);
+  console.log(`Employee: ${identifier}`);
+  console.log(`Timestamp: ${new Date().toISOString()}`);
+}
+
+async function main() {
+  await prismas.$connect();
+  console.log("Database connected successfully");
+  const employee = await prismas.employee.upsert({
+    where: {
+      id: 23,
+    },
+    update: {
+      name: "Mohan Patil",
+      email: "rohan@gmail.com",
+      salary: 50000,
+      departmentId: 2,
+    },
+    create: {
+      name: "Mohan Patil",
+      email: "rohan@gmail.com",
+      salary: 50000,
+      departmentId: 2,
+    },
+  });
+
+  console.log(employee);
+}
+
+///// Validation
+const prismas = new PrismaClient().$extends({
+  query: {
+    employee: {
+      async create({ args, query }) {
+        const salary = args.data.salary;
+
+        if (salary < 20000) {
+          throw new Error("Employee salary must be at least 20000");
+        }
+        logEmployeeOperation("create", args.data.email);
+
+        return query(args);
+      },
+    },
+  },
+});
+
+function logEmployeeOperation(operation: string, identifier: string | number) {
+  console.log(`Operation: ${operation}`);
+  console.log(`Employee: ${identifier}`);
+  console.log(`Timestamp: ${new Date().toISOString()}`);
+}
+
+async function main() {
+  await prismas.$connect();
+  console.log("Database connected successfully");
+  const employee = await prismas.employee.create({
+    data: {
+      name: "Ram Nair",
+      email: "ram@gmail.com",
+      salary: 18000,
+      departmentId: 1,
+    },
+  });
+
+  console.log(employee);
+}
+
+/////
+const prismas = new PrismaClient().$extends({
+  query: {
+    employee: {
+      async update({ args, query }) {
+        const salary = args.data.salary;
+
+        if (typeof salary === "number" && salary < 20000) {
+          throw new Error("Employee salary must be at least 20000");
+        }
+        const identifier = args.where.id ?? args.where.email;
+
+        if (identifier === undefined) {
+          throw new Error("Employee ID or email is required");
+        }
+
+        logEmployeeOperation("update", identifier);
+
+        return query(args);
+      },
+    },
+  },
+});
+
+function logEmployeeOperation(operation: string, identifier: string | number) {
+  console.log(`Operation: ${operation}`);
+  console.log(`Employee: ${identifier}`);
+  console.log(`Timestamp: ${new Date().toISOString()}`);
+}
+
+async function main() {
+  await prismas.$connect();
+  console.log("Database connected successfully");
+  const employee = await prismas.employee.update({
+    where: {
+      id: 27,
+    },
+    data: {
+      name: "Ram Nair",
+      email: "ramnair@gmail.com",
+      salary: 30000,
+      departmentId: 1,
+    },
+  });
+
+  console.log(employee);
+}
+
+///// Decrement / increment
+
+const prismas = new PrismaClient().$extends({
+  query: {
+    employee: {
+      async update({ args, query }) {
+        const employee = await prisma.employee.findUnique({
+          where: {
+            id: args.where.id,
+          },
+          select: {
+            salary: true,
+          },
+        });
+
+        let newSalary = employee?.salary;
+        const salary = args.data.salary;
+
+        if (typeof salary === "number") {
+          newSalary = salary;
+        } else if (
+          salary &&
+          "increment" in salary &&
+          typeof salary.increment === "number"
+        ) {
+          newSalary = Number(employee?.salary) + salary.increment;
+        } else if (
+          salary &&
+          "decrement" in salary &&
+          typeof salary.decrement === "number"
+        ) {
+          newSalary = Number(employee?.salary) - salary.decrement;
+        }
+        // 2. Validate before updating
+        if (newSalary !== undefined && newSalary < 20000) {
+          throw new Error("Employee salary must be at least 20000");
+        }
+        console.log(employee);
+
+        // We'll add validation here next.
+        return query(args);
+      },
+    },
+  },
+});
+
+function logEmployeeOperation(operation: string, identifier: string | number) {
+  console.log(`Operation: ${operation}`);
+  console.log(`Employee: ${identifier}`);
+  console.log(`Timestamp: ${new Date().toISOString()}`);
+}
+
+async function main() {
+  await prismas.$connect();
+  console.log("Database connected successfully");
+  const employee = await prismas.employee.update({
+    where: {
+      id: 27,
+    },
+    data: {
+      salary: {
+        decrement: 1000,
+      },
+    },
+  });
+
+  console.log(employee);
+}
+
+///
