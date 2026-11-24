@@ -1,0 +1,263 @@
+Result.....
+
+const prismas = new PrismaClient().$extends({
+  result: {
+    employee: {
+      annualSalary: {
+        needs: {
+          salary: true,
+        },
+        compute(employee) {
+          return employee.salary * 12;
+        },
+      },
+    },
+  },
+});
+
+async function main() {
+  await prismas.$connect();
+  console.log("Database connected successfully");
+
+  const employee = await prismas.employee.findMany({
+    select: {
+      id: true,
+      name: true,
+      salary: true,
+      annualSalary: true,
+    },
+  });
+
+  console.log(employee);
+}
+//////
+const prismas = new PrismaClient().$extends({
+  result: {
+    employee: {
+      salaryCategory: {
+        needs: {
+          salary: true,
+        },
+        compute(employee) {
+          if (employee.salary < 30000) {
+            return "Low";
+          }
+          if (employee.salary <= 50000) {
+            return "Medium";
+          }
+
+          return "High";
+        },
+      },
+    },
+  },
+});
+
+async function main() {
+  await prismas.$connect();
+  console.log("Database connected successfully");
+
+  const employee = await prismas.employee.findMany({
+    select: {
+      id: true,
+      name: true,
+      salary: true,
+      salaryCategory: true,
+    },
+  });
+
+  console.log(employee);
+}
+
+//////
+const prismas = new PrismaClient().$extends({
+  result: {
+    department: {
+      departmentName: {
+        needs: {
+          name: true,
+        },
+        compute(department) {
+          return department.name;
+        },
+      },
+    },
+  },
+});
+
+async function main() {
+  await prismas.$connect();
+  console.log("Database connected successfully");
+
+  const employee = await prismas.employee.findMany({
+    select: {
+      id: true,
+      name: true,
+      salary: true,
+      department: {
+        select: {
+          departmentName: true,
+        },
+      },
+    },
+  });
+
+  const employeeData = employee.map(({ department, ...emp }) => ({
+    ...emp,
+    department: department.departmentName,
+  }));
+
+  console.log(employeeData);
+}
+
+//////////////
+const prismas = new PrismaClient().$extends({
+  client: {
+    async getTotalEmployees() {
+      return await prisma.employee.count();
+    },
+  },
+});
+
+async function main() {
+  await prismas.$connect();
+  console.log("Database connected successfully");
+
+  const totalEmployees = await prismas.getTotalEmployees();
+
+  console.log("Total Employees:", totalEmployees);
+}
+
+//////
+const prismas = new PrismaClient().$extends({
+  client: {
+    async getEmployeesByDepartment(departmentId: number) {
+      return await prisma.employee.count({
+        where: {
+          departmentId,
+        },
+      });
+    },
+  },
+});
+
+async function main() {
+  await prismas.$connect();
+  console.log("Database connected successfully");
+
+  const itEmployees = await prismas.getEmployeesByDepartment(1);
+  const hrEmployees = await prismas.getEmployeesByDepartment(2);
+  const financeEmployees = await prismas.getEmployeesByDepartment(3);
+
+  console.log("IT Employees:", itEmployees);
+  console.log("HR Employees:", hrEmployees);
+  console.log("Finance Employees:", financeEmployees);
+}
+
+//////
+const prismas = new PrismaClient().$extends({
+  client: {
+    async getDepartmentSalaryStats(departmentId: number) {
+      return await prisma.employee.aggregate({
+        where: {
+          departmentId,
+        },
+        _count: true,
+        _avg: {
+          salary: true,
+        },
+        _max: {
+          salary: true,
+        },
+        _min: {
+          salary: true,
+        },
+      });
+    },
+  },
+});
+
+async function main() {
+  await prismas.$connect();
+  console.log("Database connected successfully");
+
+  const departmentSalaryStats = await prismas.getDepartmentSalaryStats(1);
+
+  console.log("Department by Employee Stats:", departmentSalaryStats);
+}
+
+///////
+const prismas = new PrismaClient().$extends({
+  client: {
+    async departmentStats(departmentId: number) {
+      return prisma.employee.aggregate({
+        where: { departmentId },
+        _count: true,
+        _avg: { salary: true },
+      });
+    },
+
+    async highSalaryEmployees(departmentId: number) {
+      return prisma.employee.count({
+        where: {
+          departmentId,
+          salary: { gt: 50000 },
+        },
+      });
+    },
+  },
+});
+
+async function main() {
+  await prismas.$connect();
+  console.log("Database connected successfully");
+
+  const [departmentStats, highSalaryEmployees] = await Promise.all([
+    prismas.departmentStats(1),
+    prismas.highSalaryEmployees(1),
+  ]);
+
+  console.log("Department Stats", departmentStats);
+  console.log("High Salary Employees :", highSalaryEmployees);
+}
+
+//////
+const prismas = new PrismaClient().$extends({
+  client: {
+    async departmentStats(departmentId: number) {
+      return prisma.employee.aggregate({
+        where: { departmentId },
+        _count: true,
+        _avg: { salary: true },
+      });
+    },
+
+    async highSalaryEmployees(departmentId: number) {
+      return prisma.employee.count({
+        where: {
+          departmentId,
+          salary: { gt: 50000 },
+        },
+      });
+    },
+  },
+});
+
+async function main() {
+  await prismas.$connect();
+  console.log("Database connected successfully");
+
+  const [departmentStats, highSalaryEmployees] = await Promise.all([
+    prismas.departmentStats(1),
+    prismas.highSalaryEmployees(1),
+  ]);
+
+  const result = {
+    totalEmployees: departmentStats._count,
+    averageSalary: departmentStats._avg.salary,
+    highSalaryEmployees: highSalaryEmployees,
+  };
+
+  console.log("result:", result);
+}
+//////

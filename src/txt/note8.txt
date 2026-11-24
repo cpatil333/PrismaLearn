@@ -1,0 +1,207 @@
+const prismas = new PrismaClient().$extends({
+  query: {
+    employee: {
+      async findFirst({ args, query }) {
+        const departmentId = args.where?.departmentId;
+
+        const identifier =
+          typeof departmentId === "number"
+            ? departmentId
+            : "Filter-based search";
+
+        logEmployeeOperation("findFirst", identifier);
+        return query(args);
+      },
+    },
+  },
+});
+
+function logEmployeeOperation(operation: string, identifier: string | number) {
+  console.log(`Operation: ${operation}`);
+  console.log(`Employee: ${identifier}`);
+  console.log(`Timestamp: ${new Date().toISOString()}`);
+}
+
+async function main() {
+  await prismas.$connect();
+  console.log("Database connected successfully");
+  const employee = await prismas.employee.findFirst({
+    where: {
+      departmentId: 1,
+    },
+  });
+
+  console.log(employee);
+}
+
+/////
+const prismas = new PrismaClient().$extends({
+  query: {
+    employee: {
+      async findMany({ args, query }) {
+        const departmentId = args.where?.departmentId;
+
+        const identifier =
+          typeof departmentId === "number" ? departmentId : "All Departments";
+
+        logEmployeeOperation("findMany", identifier);
+        return query(args);
+      },
+    },
+  },
+});
+
+function logEmployeeOperation(operation: string, identifier: string | number) {
+  console.log(`Operation: ${operation}`);
+  console.log(`Employee: ${identifier}`);
+  console.log(`Timestamp: ${new Date().toISOString()}`);
+}
+
+async function main() {
+  await prismas.$connect();
+  console.log("Database connected successfully");
+  const employee = await prismas.employee.findMany();
+
+  console.log(employee);
+}
+
+/////
+const prismas = new PrismaClient().$extends({
+  query: {
+    employee: {
+      async count({ args, query }) {
+        const departmentId = args.where?.departmentId;
+
+        const identifier =
+          typeof departmentId === "number" ? departmentId : "All Departments";
+
+        logEmployeeOperation("count", identifier);
+        return query(args);
+      },
+    },
+  },
+});
+
+function logEmployeeOperation(operation: string, identifier: string | number) {
+  console.log(`Operation: ${operation}`);
+  console.log(`Employee: ${identifier}`);
+  console.log(`Timestamp: ${new Date().toISOString()}`);
+}
+
+async function main() {
+  await prismas.$connect();
+  console.log("Database connected successfully");
+  const employee = await prismas.employee.count({
+    where: {
+      departmentId: 1,
+    },
+  });
+
+  console.log(employee);
+}
+
+/////
+const prismas = new PrismaClient().$extends({
+  query: {
+    employee: {
+      async aggregate({ args, query }) {
+        const departmentId = args.where?.departmentId;
+
+        const identifier =
+          typeof departmentId === "number" ? departmentId : "All Departments";
+
+        logEmployeeOperation("aggregate", identifier);
+        return query(args);
+      },
+    },
+  },
+});
+
+function logEmployeeOperation(operation: string, identifier: string | number) {
+  console.log(`Operation: ${operation}`);
+  console.log(`Employee: ${identifier}`);
+  console.log(`Timestamp: ${new Date().toISOString()}`);
+}
+
+async function main() {
+  await prismas.$connect();
+  console.log("Database connected successfully");
+
+  const employee = await prismas.employee.aggregate({
+    where: {
+      departmentId: 1,
+    },
+    _count: true,
+    _avg: {
+      salary: true,
+    },
+    _max: {
+      salary: true,
+    },
+    _min: {
+      salary: true,
+    },
+  });
+
+  console.log(employee);
+}
+
+/////
+const prismas = new PrismaClient().$extends({
+  query: {
+    employee: {
+      async groupBy({ args, query }) {
+        const departmentId = args.where?.departmentId;
+
+        const identifier =
+          typeof departmentId === "number" ? departmentId : "All Departments";
+
+        logEmployeeOperation("groupBy", identifier);
+        return query(args);
+      },
+    },
+  },
+});
+
+function logEmployeeOperation(operation: string, identifier: string | number) {
+  console.log(`Operation: ${operation}`);
+  console.log(`Employee: ${identifier}`);
+  console.log(`Timestamp: ${new Date().toISOString()}`);
+}
+
+async function main() {
+  await prismas.$connect();
+  console.log("Database connected successfully");
+
+  const employee = await prismas.employee.groupBy({
+    by: ["departmentId"],
+    _count: {
+      _all: true,
+    },
+  });
+
+  //console.log(employee);
+
+  const departmentIds = employee.map((dept) => dept.departmentId);
+
+  const employeeDepartmentName = await prisma.department.findMany({
+    where: {
+      id: {
+        in: departmentIds,
+      },
+    },
+  });
+
+  //console.log(employeeDepartmentName);
+
+  employee.map((dept) => {
+    const res = employeeDepartmentName.find(
+      (empDep) => empDep.id === dept.departmentId,
+    );
+    console.log(
+      `department: ${res?.name}, employeeCount : ${dept._count._all}`,
+    );
+  });
+}
+
+////////////
