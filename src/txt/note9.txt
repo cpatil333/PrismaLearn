@@ -261,3 +261,223 @@ async function main() {
   console.log("result:", result);
 }
 //////
+const prismas = new PrismaClient().$extends({
+  client: {
+    async getEmployeeProfile(email: string) {
+      return prisma.employee.findUnique({
+        where: {
+          email,
+        },
+        include: {
+          department: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      });
+    },
+  },
+});
+
+async function main() {
+  await prismas.$connect();
+  console.log("Database connected successfully");
+
+  const employeeProfile = await prismas.getEmployeeProfile("rahul@company.com");
+
+  const result = {
+    ID: employeeProfile?.id,
+    Name: employeeProfile?.name,
+    Email: employeeProfile?.email,
+    Salary: employeeProfile?.salary,
+    Department: employeeProfile?.department.name,
+  };
+
+  console.log("Employee Profile Details:", result);
+}
+/////////////////
+VAlidation
+const prismas = new PrismaClient().$extends({
+  client: {
+    async getEmployeeByEmail(email: string) {
+      const employee = await prisma.employee.findUnique({
+        where: {
+          email,
+        },
+        include: {
+          department: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      });
+
+      if (employee === null) {
+        throw new Error("Employee not found");
+      }
+
+      return employee;
+    },
+  },
+});
+
+async function main() {
+  await prismas.$connect();
+  console.log("Database connected successfully");
+
+  const employeeProfile = await prismas.getEmployeeByEmail("rahul@company.com");
+
+  const result = {
+    ID: employeeProfile?.id,
+    Name: employeeProfile?.name,
+    Email: employeeProfile?.email,
+    Salary: employeeProfile?.salary,
+    Department: employeeProfile?.department.name,
+  };
+
+  console.log("Employee Profile Details:", result);
+}
+
+////////
+const prismas = new PrismaClient().$extends({
+  client: {
+    async updateEmployeeSalary(employeeId: number, newSalary: number) {
+      const existingEmployee = await prisma.employee.findUnique({
+        where: {
+          id: employeeId,
+        },
+      });
+
+      if (existingEmployee === null) {
+        throw new Error("Employee not found");
+      }
+
+      if (newSalary < 20000) {
+        throw new Error("Salary must be at least 20000");
+      }
+
+      const updatedEmployee = await prisma.employee.update({
+        where: {
+          id: employeeId,
+        },
+        data: {
+          salary: newSalary,
+        },
+      });
+
+      return updatedEmployee;
+    },
+  },
+});
+
+async function main() {
+  await prismas.$connect();
+  console.log("Database connected successfully");
+
+  const employeeSalary = await prismas.updateEmployeeSalary(999, 75000);
+
+  console.log("Employee Salary updated:", employeeSalary);
+}
+//////
+const prismas = new PrismaClient().$extends({
+  client: {
+    async transferEmployee(employeeId: number, newDepartmentId: number) {
+      const existingEmployee = await prisma.employee.findUnique({
+        where: {
+          id: employeeId,
+        },
+      });
+
+      if (existingEmployee === null) {
+        throw new Error("Employee not found");
+      }
+
+      const existingDepartment = await prisma.department.findUnique({
+        where: {
+          id: newDepartmentId,
+        },
+      });
+
+      if (existingDepartment === null) {
+        throw new Error("Department not found");
+      }
+
+      //If both exist, update the employee's departmentId.
+      const updatedEmployee = await prisma.employee.update({
+        where: {
+          id: employeeId,
+        },
+        data: {
+          departmentId: newDepartmentId,
+        },
+      });
+
+      return updatedEmployee;
+    },
+  },
+});
+
+async function main() {
+  await prismas.$connect();
+  console.log("Database connected successfully");
+
+  const transferEmployee = await prismas.transferEmployee(999, 2);
+
+  console.log("Transfer Employee:", transferEmployee);
+}
+
+//////
+const prismas = new PrismaClient().$extends({
+  client: {
+    async transferEmployee(employeeId: number, newDepartmentId: number) {
+      //First check exist employee Id
+      const existingEmployee = await prisma.employee.findUnique({
+        where: {
+          id: employeeId,
+        },
+      });
+
+      if (existingEmployee === null) {
+        throw new Error("Employee not found");
+      }
+
+      //Check deparment exist or not
+      const existingDepartment = await prisma.department.findUnique({
+        where: {
+          id: newDepartmentId,
+        },
+      });
+
+      if (existingDepartment === null) {
+        throw new Error("Department not found");
+      }
+
+      if (existingEmployee.departmentId === newDepartmentId) {
+        throw new Error("Employee already belongs to this department");
+      }
+
+      //If both exist, update the employee's departmentId.
+      const updatedEmployee = await prisma.employee.update({
+        where: {
+          id: employeeId,
+        },
+        data: {
+          departmentId: newDepartmentId,
+        },
+      });
+
+      return updatedEmployee;
+    },
+  },
+});
+
+async function main() {
+  await prismas.$connect();
+  console.log("Database connected successfully");
+
+  const transferEmployee = await prismas.transferEmployee(3, 999);
+
+  console.log(transferEmployee);
+}

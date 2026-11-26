@@ -7,21 +7,44 @@ type EmployeeHaving = Prisma.EmployeeScalarWhereWithAggregatesInput;
 
 const prismas = new PrismaClient().$extends({
   client: {
-    async departmentStats(departmentId: number) {
-      return prisma.employee.aggregate({
-        where: { departmentId },
-        _count: true,
-        _avg: { salary: true },
-      });
-    },
-
-    async highSalaryEmployees(departmentId: number) {
-      return prisma.employee.count({
+    async transferEmployee(employeeId: number, newDepartmentId: number) {
+      //First check exist employee Id
+      const existingEmployee = await prisma.employee.findUnique({
         where: {
-          departmentId,
-          salary: { gt: 50000 },
+          id: employeeId,
         },
       });
+
+      if (existingEmployee === null) {
+        throw new Error("Employee not found");
+      }
+
+      //Check deparment exist or not
+      const existingDepartment = await prisma.department.findUnique({
+        where: {
+          id: newDepartmentId,
+        },
+      });
+
+      if (existingDepartment === null) {
+        throw new Error("Department not found");
+      }
+
+      if (existingEmployee.departmentId === newDepartmentId) {
+        throw new Error("Employee already belongs to this department");
+      }
+
+      //If both exist, update the employee's departmentId.
+      const updatedEmployee = await prisma.employee.update({
+        where: {
+          id: employeeId,
+        },
+        data: {
+          departmentId: newDepartmentId,
+        },
+      });
+
+      return updatedEmployee;
     },
   },
 });
@@ -30,18 +53,9 @@ async function main() {
   await prismas.$connect();
   console.log("Database connected successfully");
 
-  const [departmentStats, highSalaryEmployees] = await Promise.all([
-    prismas.departmentStats(1),
-    prismas.highSalaryEmployees(1),
-  ]);
+  const transferEmployee = await prismas.transferEmployee(3, 999);
 
-  const result = {
-    totalEmployees: departmentStats._count,
-    averageSalary: departmentStats._avg.salary,
-    highSalaryEmployees: highSalaryEmployees,
-  };
-
-  console.log("result:", result);
+  console.log(transferEmployee);
 }
 
 main()
